@@ -17,20 +17,21 @@ print(str1)
 dt1 = dt.datetime.strptime(str1, '%y/%m/%d')
 print(dt1)'''
 
+class Total_EXP:
+	def __init__(self):
+		self.Lv_list = []
+	
+	def TE_List_read(self): # T.E = Total EXP
+		self.Lv_list = [int(line) for line in open('Total_EXP_List.txt')]
 
-def TE_List_read(): # T.E = Total EXP
-	arr = [int(line) for line in open('Total_EXP_List.txt')]
-	return arr
+	def TE_calc(self,Lv,RE):# R.E = remainingEXP
+		'''
+		Lv xを入力すると Lv x+1の累計EXP値が参照される。
+		それから「次のLvまであとどれくらいか」のEXP値を引くと
+		現在のEXPが求まる。
+		'''
 
-
-def TE_calc(Lv,RE):# R.E = remainingEXP
-	'''
-	Lv xを入力すると Lv x+1の累計EXP値が参照される。
-	それから「次のLvまであとどれくらいか」のEXP値を引くと
-	現在のEXPが求まる。
-	'''
-	TE_List = TE_List_read()
-	return TE_List[Lv] - RE
+		return self.Lv_list[Lv] - RE
 
 class F_data:
 	def __init__(self, date, Lv, RE, diff_date, TE, PE, PLv):
@@ -43,6 +44,9 @@ class F_data:
 		self.PLv = PLv
 
 #print(TE_calc(55,1056))
+
+TE = Total_EXP()
+TE.TE_List_read()
 
 with open("sampledata.txt",encoding='utf-8') as f:
 	shipname = f.readline().strip("\n")
@@ -65,7 +69,7 @@ with open("sampledata.txt",encoding='utf-8') as f:
 				int( data_s[1] ),
 				int( data_s[2] ),
 				dt.datetime.strptime(data_s[0], '%y.%m.%d') - startdate ,
-				TE_calc( int(data_s[1]), int(data_s[2]) ),
+				TE.TE_calc( int(data_s[1]), int(data_s[2]) ),
 				0,
 				0
 			)
