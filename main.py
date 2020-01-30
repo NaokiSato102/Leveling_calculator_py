@@ -27,7 +27,6 @@ class Total_EXP:
 			今後のLv上限拡張に対して柔軟に対応可能なように、
 			コードにべた書きでなく 別途テキストデータを読み込む形に。
 		"""
-
 		self.Lv_list = [int(line) for line in open('Total_EXP_List.txt')]
 
 	def TE_calc(self,lv,rem_exp):# R.E = remainingEXP
@@ -50,7 +49,6 @@ class Total_EXP:
 			total_exp : int
 				累計Exp
 		'''
-
 		return self.Lv_list[lv] - rem_exp
 
 class FG_data:
@@ -63,43 +61,41 @@ class FG_data:
 		self.rem_exp = []
 		self.total_exp = np.empty(0, dtype=np.int)
 
-
-
-
+	def load_data(self, filename):
+		"""
+			レベリングの記録を保存したテキストデータから情報をロードしクラスへ格納
+			テキストデータのエンコード形式はUTF-8。気をつけよう。
+			Parameters
+			----------
+			filename : str
+				レベリングの記録を保存したテキストファイルのファイルネーム
+			
+		"""
+		with open(filename,encoding='utf-8') as f:
+			self.name = f.readline().strip("\n")
+			self.dst_lv = int(f.readline().strip("\n") )
+			self.dst_exp = TE.TE_calc(self.dst_lv-1, 0)
+			datas = f.readlines()
+			for i in datas:
+				date, lv, rem_exp = i.split()
+				date = dt.datetime.strptime(date, '%y.%m.%d')
+				lv = int(lv)
+				rem_exp = int(rem_exp)
+				self.date = np.append(self.date, date)
+				self.lv.append(lv)
+				self.rem_exp.append(rem_exp)
+				self.total_exp = np.append(self.total_exp, TE.TE_calc(lv, rem_exp) )
 
 TE = Total_EXP()
 TE.TE_List_read()
 
-
-
 one = FG_data()
-with open("sampledata.txt",encoding='utf-8') as f:
-	one.name = f.readline().strip("\n")
-	 
+one.load_data("sampledata.txt")
 
 
-	
-	one.dst_lv = int(f.readline().strip("\n") )
-	print('[{}]'.format(one.dst_lv) )
-
-	one.dst_exp = TE.TE_calc(one.dst_lv-1, 0)
-	print('[{}]'.format(one.dst_exp) )
-	
-	datas = f.readlines()
-	
-	for i in datas:
-		date, lv, rem_exp = i.split()
-
-		date = dt.datetime.strptime(date, '%y.%m.%d')
-		lv = int(lv)
-		rem_exp = int(rem_exp)
-
-		one.date = np.append(one.date, date)
-		one.lv.append(lv)
-		one.rem_exp.append(rem_exp)
-		one.total_exp = np.append(one.total_exp, TE.TE_calc(lv, rem_exp) )
-
-
+print('[{}]'.format(one.name) )
+print('[{}]'.format(one.dst_lv) )
+print('[{}]'.format(one.dst_exp) )
 
 print("日付    \t Lv\t     RE\t     TE")	
 for i in range( len(one.date) ):
