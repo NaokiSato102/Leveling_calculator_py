@@ -1,6 +1,8 @@
 # coding: UTF-8
 import datetime as dt
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 """
 変数　略語集
@@ -57,6 +59,7 @@ class FG_data:
 		self.dst_lv = 0
 		self.dst_exp = 0
 		self.date = []
+		self.date_unix = np.empty(0)
 		self.lv = []
 		self.rem_exp = []
 		self.total_exp = np.empty(0, dtype=np.int)
@@ -81,16 +84,22 @@ class FG_data:
 				date = dt.datetime.strptime(date, '%y.%m.%d')
 				lv = int(lv)
 				rem_exp = int(rem_exp)
-				self.date = np.append(self.date, date)
+				self.date.append( date)
 				self.lv.append(lv)
 				self.rem_exp.append(rem_exp)
 				self.total_exp = np.append(self.total_exp, TE.TE_calc(lv, rem_exp) )
+		
+	def cov_date_unix(self):
+		"""
+			最小二乗法の計算用にdateをUNIX時間へ変換しdate_unixへ代入
+		"""
+		self.date_unix = np.array( [ [ i.timestamp() for i in self.date ], np.ones(len(self.date) ) ] ).T
 
 TE = Total_EXP()
 TE.TE_List_read()
 
 one = FG_data()
-one.load_data("sampledata.txt")
+one.load_data("sampledata 赤城.txt")
 
 
 print('[{}]'.format(one.name) )
@@ -107,4 +116,36 @@ for i in range( len(one.date) ):
 		)
 	)
 
+one.cov_date_unix()
+print(  )
 
+a,b = np.linalg.lstsq(one.date_unix, one.total_exp, rcond=0)[0]
+dst_day_unix = (one.dst_exp - b)/a
+dst_day = dt.datetime.fromtimestamp( dst_day_unix )
+print("レベリング終了予定日：{}".format(dst_day.strftime('%y.%m.%d') ) )
+
+
+
+print("あと{}日ほど".format( (dst_day-dt.datetime.now() ).days) )
+print("EXP/day={}".format(a*24*60*60) )
+
+fig = plt.figure() # Figureオブジェクトを作成
+ax1 = fig.add_subplot(3,2,1) # figに属するAxesオブジェクトを作成
+
+ax1.plot(one.date, one.total_exp, "ro")
+#ax1.plot(A[:,0], np.full(A[:,0].shape, Dst_LV), "b--")
+
+
+
+ax1.plot(one.date, (a*one.date_unix[:,0]+b), "g--")
+
+
+# DayLocatorで間隔を日数に
+ax1.xaxis.set_major_locator( mdates.DayLocator() )
+
+# Formatterでx軸の日付ラベルを月・日に設定
+ax1.xaxis.set_major_formatter( mdates.DateFormatter("%m/%d") )
+# ラベルを270度回す
+ax1.tick_params(axis='x', rotation=270)
+ax1.grid(True)
+plt.show()
